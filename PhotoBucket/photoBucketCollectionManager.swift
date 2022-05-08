@@ -11,6 +11,7 @@ import Firebase
 class photoBucketCollectionManager{
     static let shared = photoBucketCollectionManager()
     var _collectionRef: CollectionReference
+    var pbid: String?
     private init(){
         _collectionRef = Firestore.firestore().collection(kPhotoCollectionPath)
     }
@@ -28,12 +29,12 @@ class photoBucketCollectionManager{
         
          return query.addSnapshotListener{querySnapshot, error in
             guard let documents = querySnapshot?.documents else{
-                print("error")
+               //print("error")
                 return
             }
             self.latestPhotoBuckets.removeAll()
             for document in documents{
-                print("\(document.documentID) => \(document.data())")
+              //  print("\(document.documentID) => \(document.data())")
                 self.latestPhotoBuckets.append(photoBucket(documentSnapshot:document))
             }
             changeListener()
@@ -44,23 +45,24 @@ class photoBucketCollectionManager{
     }
     
     func add(_ photo: photoBucket){
-        _collectionRef.addDocument(data: [
+        let newRef = _collectionRef.addDocument(data: [
             kPhotoCaption: photo.caption,
-            kPhotoURL: photo.url,
+            //kPhotoURL: photo.url,
             kCreateTime: Timestamp.init(),
             kPhotoBucketUID: AuthManager.shared.currentUser!.uid
         ]){ err in
             if let err = err{
-                print("Error adding document \(err)")
+                //print("Error adding document \(err)")
             }
         }
+        self.pbid = newRef.documentID
     }
     func delete(_ documentId: String){
         _collectionRef.document(documentId).delete() { err in
             if let err = err {
-                print("Error removing document: \(err)")
+               // print("Error removing document: \(err)")
             } else {
-                print("Document successfully removed!")
+                //print("Document successfully removed!")
             }
         }
     }

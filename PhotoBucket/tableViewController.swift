@@ -8,7 +8,7 @@
 import Foundation
 import UIKit
 import Firebase
-
+import FirebaseStorage
 class photoBucketViewCell: UITableViewCell{
     
     @IBOutlet weak var captionLabel: UILabel!
@@ -22,12 +22,11 @@ class tableViewController: UITableViewController{
     var doEdit = true;
     var logoutHandle : AuthStateDidChangeListenerHandle?
 
-
     override func viewDidLoad() {
         super.viewDidLoad()
-        navigationItem.leftBarButtonItem = editButtonItem
- //       navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: UIBarButtonItem.SystemItem.add, target: self, action: #selector(showAddPhotoDialog))
-        navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Menu", style: .plain, target: self, action:#selector(showMenu))
+  //      navigationItem.leftBarButtonItem = editButtonItem
+        navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: UIBarButtonItem.SystemItem.add, target: self, action: #selector(showAddPhotoDialog))
+  //      navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Menu", style: .plain, target: self, action:#selector(showMenu))
         
     }
     
@@ -58,39 +57,39 @@ class tableViewController: UITableViewController{
         photoBucketCollectionManager.shared.stopListening(photoListenerRegistration)
     }
     
-    @objc func showMenu(){
-        let alertController = UIAlertController(title: nil, message: nil, preferredStyle: UIAlertController.Style.actionSheet)
-        
-        let addPhoto = UIAlertAction(title: "Add Photo", style: UIAlertAction.Style.default) { UIAlertAction in
-            self.showAddPhotoDialog()
-        }
-        
-        let showMyPhoto = UIAlertAction(title: isShowingAllPhoto ? "Show my Photo" : "Show all photos", style: UIAlertAction.Style.default) { UIAlertAction in
-            self.isShowingAllPhoto = !self.isShowingAllPhoto
-            self.startListeningForPhotoBuckets()
-        }
-        
-        let signOut = UIAlertAction(title: "Sign Out", style: UIAlertAction.Style.default) { UIAlertAction in
-            print("You signed out")
-            AuthManager.shared.signOut()
-        }
-        
-        let cancelAction = UIAlertAction(title: "Cancel", style: UIAlertAction.Style.cancel) { UIAlertAction in
-        }
-        
-        let edit = UIAlertAction(title: !isEditing ? "Edit" : "End Editing", style: UIAlertAction.Style.default){
-            UIAlertController in
-            self.isEditing = !self.isEditing
-        }
-        alertController.addAction(addPhoto)
-
-        alertController.addAction(showMyPhoto)
-
-        alertController.addAction(signOut)
-        alertController.addAction(edit)
-        alertController.addAction(cancelAction)
-        present(alertController, animated: true)
-    }
+//    @objc func showMenu(){
+//        let alertController = UIAlertController(title: nil, message: nil, preferredStyle: UIAlertController.Style.actionSheet)
+//        
+//        let addPhoto = UIAlertAction(title: "Add Photo", style: UIAlertAction.Style.default) { UIAlertAction in
+//            self.showAddPhotoDialog()
+//        }
+//        
+//        let showMyPhoto = UIAlertAction(title: isShowingAllPhoto ? "Show my Photo" : "Show all photos", style: UIAlertAction.Style.default) { UIAlertAction in
+//            self.isShowingAllPhoto = !self.isShowingAllPhoto
+//            self.startListeningForPhotoBuckets()
+//        }
+//        
+//        let signOut = UIAlertAction(title: "Sign Out", style: UIAlertAction.Style.default) { UIAlertAction in
+//            print("You signed out")
+//            AuthManager.shared.signOut()
+//        }
+//        
+//        let cancelAction = UIAlertAction(title: "Cancel", style: UIAlertAction.Style.cancel) { UIAlertAction in
+//        }
+//        
+//        let edit = UIAlertAction(title: !isEditing ? "Edit" : "End Editing", style: UIAlertAction.Style.default){
+//            UIAlertController in
+//            self.isEditing = !self.isEditing
+//        }
+//        alertController.addAction(addPhoto)
+//
+//        alertController.addAction(showMyPhoto)
+//
+//        alertController.addAction(signOut)
+//        alertController.addAction(edit)
+//        alertController.addAction(cancelAction)
+//        present(alertController, animated: true)
+//    }
     
     @objc func showAddPhotoDialog(){
         let alertController = UIAlertController(title: "Add a new photo", message: "", preferredStyle: UIAlertController.Style.alert)
@@ -98,27 +97,48 @@ class tableViewController: UITableViewController{
         alertController.addTextField { textField in
             textField.placeholder = "Caption in"
         }
-        
-        alertController.addTextField { textField in
-            textField.placeholder = "URL in"
-        }
+//
+//        alertController.addTextField { textField in
+//            textField.placeholder = "URL in"
+//        }
         
         //let cancelAction = UIAlertAction(title: "Cancel", style: UIAlertAction.Style.cancel, handler: nil )
-        
-        let submitAction = UIAlertAction(title: "Create ", style: UIAlertAction.Style.default){ UIAlertAction in
-            let captionTextField = alertController.textFields![0] as UITextField
-            let URLTextField = alertController.textFields![1] as UITextField
-            let photo = photoBucket(caption: captionTextField.text!, url: URLTextField.text!)
-            photoBucketCollectionManager.shared.add(photo)
-
-            //self.photoBuckets.insert(photo, at: 0)
-            self.tableView.reloadData()
-
-        }
+//
+//        let submitAction = UIAlertAction(title: "Create ", style: UIAlertAction.Style.default){ UIAlertAction in
+//            let captionTextField = alertController.textFields![0] as UITextField
+//            //let URLTextField = alertController.textFields![1] as UITextField
+//            let photo = photoBucket(caption: captionTextField.text!, url: URLTextField.text!)
+//            photoBucketCollectionManager.shared.add(photo)
+//
+//            //self.photoBuckets.insert(photo, at: 0)
+//            self.tableView.reloadData()
+//
+//        }
         let cancelAction = UIAlertAction(title: "Cancel", style: UIAlertAction.Style.cancel) { UIAlertAction in
 
         }
-        alertController.addAction(submitAction)
+        
+        let uploadPhotoAction = UIAlertAction(title:"Upload Photos", style: UIAlertAction.Style.default){
+                UIAlertAction in
+            
+            let captionTextField = alertController.textFields![0] as UITextField
+//            let photo = photoBucket(caption: captionTextField.text!)
+//            photoBucketCollectionManager.shared.add(photo)
+            let imagePicker = UIImagePickerController()
+            //let imageURL: UIImagePickerController.InfoKey
+            imagePicker.delegate = self
+            
+            imagePicker.sourceType = .photoLibrary
+            let photo = photoBucket(caption: captionTextField.text!)
+            photoBucketCollectionManager.shared.add(photo)
+
+            self.present(imagePicker, animated: true )
+            
+            self.tableView.reloadData()
+
+
+        }
+        alertController.addAction(uploadPhotoAction)
         alertController.addAction(cancelAction)
         
         present(alertController, animated: true, completion: nil)
@@ -177,5 +197,45 @@ class tableViewController: UITableViewController{
                 pbdvc.photoBucketDocumentId = photo.documentId!
             }
         }
+    }
+}
+
+extension tableViewController: UIImagePickerControllerDelegate, UINavigationControllerDelegate{
+    func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
+        picker.dismiss(animated: true)
+    }
+    
+
+    func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
+        
+        // TODO: Upload the known information to the Firestore
+        // get the document ID for the Photo document
+        // Use that document ID as the child name in Storage
+        // after upload is done, write the downloadUrl to finish the Photo
+        
+                
+                if let image = info[UIImagePickerController.InfoKey.originalImage] as! UIImage?{
+                    let latestphotobucket = photoBucketCollectionManager.shared.pbid
+                    storageManager.shared.uploadPhotoBucketPhoto(documentId: latestphotobucket!, image: image)
+                      //let purl = info[.imageURL] as? URL //here's your URL
+                      //photourl = purl!.path
+//                    photoBucketDocumentManager.shared.updatePhotoUrl(documentID: latestphotobucket, PhotoUrl: <#T##String#>)
+                   
+                    let gsReference =  Storage.storage().reference(withPath: latestphotobucket!)
+                    // Create a reference to the file you want to download
+                    let starsRef = gsReference.child(latestphotobucket!)
+                    // Fetch the download URL
+                    gsReference.downloadURL { url, error in
+                      if let error = error {
+                        // Handle any errors
+                      } else {
+                        // Get the download URL for 'images/stars.jpg'
+                          print("So the photo url is \(url)")
+                          photoBucketDocumentManager.shared.updatePhotoUrl(documentID: latestphotobucket!, PhotoUrl: url!.path)
+                      }
+                    }
+                        
+                }
+                picker.dismiss(animated: true)
     }
 }

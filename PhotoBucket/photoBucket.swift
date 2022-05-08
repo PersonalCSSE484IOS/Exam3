@@ -9,20 +9,25 @@ import Foundation
 import Firebase
 class photoBucket{
     var caption: String
-    var url: String
+    var url: String?
     var documentId: String?
     var authorUid: String?
     
-    init(caption:String, url:String){
+//    init(caption:String, url:String){
+//        self.caption = caption
+//        self.url = url
+//    }
+    
+    init(caption:String){
         self.caption = caption
-        self.url = url
+        self.url = ""
     }
     
     init(documentSnapshot: DocumentSnapshot){
         self.documentId = documentSnapshot.documentID
         let data = documentSnapshot.data()
         self.caption = data?[kPhotoCaption] as! String
-        self.url = data?[kPhotoURL] as! String
+        //self.url = data?[kPhotoURL] as! String
         self.authorUid = data?[kPhotoBucketUID] as? String? ?? ""
     }
 }
